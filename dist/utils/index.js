@@ -99,6 +99,8 @@ function getData(emoji, skin, set) {
 
     if (_data2.default.emojis.hasOwnProperty(emoji)) {
       emojiData = _data2.default.emojis[emoji];
+    } else {
+      return null;
     }
   } else if (emoji.id) {
     if (_data2.default.short_names.hasOwnProperty(emoji.id)) {

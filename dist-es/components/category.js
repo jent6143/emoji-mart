@@ -8,6 +8,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import frequently from '../utils/frequently';
+import { getData } from '../utils';
 import { Emoji } from '.';
 
 var Category = function (_React$Component) {
@@ -138,7 +139,13 @@ var Category = function (_React$Component) {
             }
 
             return id;
+          }).filter(function (id) {
+            return !!getData(id);
           });
+        }
+
+        if (emojis.length === 0 && frequentlyUsed.length > 0) {
+          return null;
         }
       }
 

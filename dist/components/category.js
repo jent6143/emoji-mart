@@ -40,6 +40,8 @@ var _frequently = require('../utils/frequently');
 
 var _frequently2 = _interopRequireDefault(_frequently);
 
+var _utils = require('../utils');
+
 var _ = require('.');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -172,7 +174,13 @@ var Category = function (_React$Component) {
             }
 
             return id;
+          }).filter(function (id) {
+            return !!(0, _utils.getData)(id);
           });
+        }
+
+        if (emojis.length === 0 && frequentlyUsed.length > 0) {
+          return null;
         }
       }
 
