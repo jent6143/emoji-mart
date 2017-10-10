@@ -74,6 +74,7 @@ var Emoji = function Emoji(props) {
   var unified = _getData3.unified;
   var custom = _getData3.custom;
   var short_names = _getData3.short_names;
+  var colons = _getData3.colons;
   var imageUrl = _getData3.imageUrl;
   var style = {};
   var children = props.children;
@@ -85,7 +86,7 @@ var Emoji = function Emoji(props) {
   }
 
   if (props.tooltip) {
-    title = short_names[0];
+    title = short_names ? ':' + short_names[0] + ':' : colons;
   }
 
   if (props.native && unified) {
