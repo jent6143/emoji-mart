@@ -60,7 +60,7 @@ const Emoji = props => {
     }
   }
 
-  var { unified, custom, short_names, imageUrl } = _getData(props),
+  var { unified, custom, short_names, colons, imageUrl } = _getData(props),
     style = {},
     children = props.children,
     className = 'emoji-mart-emoji',
@@ -71,7 +71,7 @@ const Emoji = props => {
   }
 
   if (props.tooltip) {
-    title = short_names[0]
+    title = short_names ? `:${short_names[0]}:` : colons
   }
 
   if (props.native && unified) {

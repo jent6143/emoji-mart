@@ -38,6 +38,7 @@ storiesOf('Picker', module)
       color={color('Highlight color', '#ae65c5')}
       showPreview={boolean('Show preview', true)}
       custom={CUSTOM_EMOJIS}
+      emojiTooltip
     />
   ));
 
