@@ -22,24 +22,6 @@ Object.defineProperty(exports, 'Category', {
   }
 });
 
-var _emoji = require('./emoji');
-
-Object.defineProperty(exports, 'Emoji', {
-  enumerable: true,
-  get: function get() {
-    return _interopRequireDefault(_emoji).default;
-  }
-});
-
-var _picker = require('./picker');
-
-Object.defineProperty(exports, 'Picker', {
-  enumerable: true,
-  get: function get() {
-    return _interopRequireDefault(_picker).default;
-  }
-});
-
 var _preview = require('./preview');
 
 Object.defineProperty(exports, 'Preview', {
@@ -64,6 +46,42 @@ Object.defineProperty(exports, 'Skins', {
   enumerable: true,
   get: function get() {
     return _interopRequireDefault(_skins).default;
+  }
+});
+
+var _emoji = require('./emoji/emoji');
+
+Object.defineProperty(exports, 'Emoji', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_emoji).default;
+  }
+});
+
+var _nimbleEmoji = require('./emoji/nimble-emoji');
+
+Object.defineProperty(exports, 'NimbleEmoji', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_nimbleEmoji).default;
+  }
+});
+
+var _picker = require('./picker/picker');
+
+Object.defineProperty(exports, 'Picker', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_picker).default;
+  }
+});
+
+var _nimblePicker = require('./picker/nimble-picker');
+
+Object.defineProperty(exports, 'NimblePicker', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_nimblePicker).default;
   }
 });
 

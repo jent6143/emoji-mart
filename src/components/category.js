@@ -3,12 +3,13 @@ import PropTypes from 'prop-types'
 
 import frequently from '../utils/frequently'
 import { getData } from '../utils'
-import { Emoji } from '.'
+import { NimbleEmoji } from '.'
 
 export default class Category extends React.Component {
   constructor(props) {
     super(props)
 
+    this.data = props.data
     this.setContainerRef = this.setContainerRef.bind(this)
     this.setLabelRef = this.setLabelRef.bind(this)
   }
@@ -83,7 +84,6 @@ export default class Category extends React.Component {
     margin = margin > this.maxMargin ? this.maxMargin : margin
 
     if (margin == this.margin) return
-    var { name } = this.props
 
     if (!this.props.hasStickyPosition) {
       this.label.style.top = `${margin}px`
@@ -101,18 +101,20 @@ export default class Category extends React.Component {
       let frequentlyUsed = recent || frequently.get(perLine)
 
       if (frequentlyUsed.length) {
-        emojis = frequentlyUsed.map(id => {
-          const emoji = custom.filter(e => e.id === id)[0]
-          if (emoji) {
-            return emoji
-          }
+        emojis = frequentlyUsed
+          .map((id) => {
+            const emoji = custom.filter((e) => e.id === id)[0]
+            if (emoji) {
+              return emoji
+            }
 
-          return id
-        }).filter(id => !!getData(id))
+            return id
+          })
+          .filter((id) => !!getData(id, null, null, this.data))
       }
 
       if (emojis.length === 0 && frequentlyUsed.length > 0) {
-        return null;
+        return null
       }
     }
 
@@ -142,7 +144,7 @@ export default class Category extends React.Component {
   }
 
   render() {
-    var { name, hasStickyPosition, emojiProps, i18n } = this.props,
+    var { id, name, hasStickyPosition, emojiProps, i18n } = this.props,
       emojis = this.getEmojis(),
       labelStyles = {},
       labelSpanStyles = {},
@@ -167,9 +169,9 @@ export default class Category extends React.Component {
     return (
       <div
         ref={this.setContainerRef}
-        className={`emoji-mart-category ${emojis && !emojis.length
-          ? 'emoji-mart-no-results'
-          : ''}`}
+        className={`emoji-mart-category ${
+          emojis && !emojis.length ? 'emoji-mart-no-results' : ''
+        }`}
         style={containerStyles}
       >
         <div
@@ -178,17 +180,21 @@ export default class Category extends React.Component {
           className="emoji-mart-category-label"
         >
           <span style={labelSpanStyles} ref={this.setLabelRef}>
-            {i18n.categories[name.toLowerCase()]}
+            {i18n.categories[id]}
           </span>
         </div>
 
-        {emojis && emojis.map(emoji => Emoji({ emoji: emoji, ...emojiProps }))}
+        {emojis &&
+          emojis.map((emoji) =>
+            NimbleEmoji({ emoji: emoji, data: this.data, ...emojiProps }),
+          )}
 
         {emojis &&
           !emojis.length && (
             <div>
               <div>
-                {Emoji({
+                {NimbleEmoji({
+                  data: this.data,
                   ...emojiProps,
                   size: 38,
                   emoji: 'sleuth_or_spy',

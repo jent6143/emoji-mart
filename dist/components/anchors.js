@@ -46,10 +46,7 @@ var Anchors = function (_React$PureComponent) {
 
     var _this = (0, _possibleConstructorReturn3.default)(this, (Anchors.__proto__ || (0, _objectGetPrototypeOf2.default)(Anchors)).call(this, props));
 
-    var categories = props.categories;
-
-
-    var defaultCategory = categories.filter(function (category) {
+    var defaultCategory = props.categories.filter(function (category) {
       return category.first;
     })[0];
 
@@ -62,6 +59,20 @@ var Anchors = function (_React$PureComponent) {
   }
 
   (0, _createClass3.default)(Anchors, [{
+    key: 'getSVG',
+    value: function getSVG(id) {
+      this.SVGs || (this.SVGs = {});
+
+      if (this.SVGs[id]) {
+        return this.SVGs[id];
+      } else {
+        var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">\n       ' + _svgs2.default[id] + '\n      </svg>';
+
+        this.SVGs[id] = svg;
+        return svg;
+      }
+    }
+  }, {
     key: 'handleClick',
     value: function handleClick(e) {
       var index = e.currentTarget.getAttribute('data-index');
@@ -89,6 +100,7 @@ var Anchors = function (_React$PureComponent) {
         'div',
         { className: 'emoji-mart-anchors' },
         categories.map(function (category, i) {
+          var id = category.id;
           var name = category.name;
           var anchor = category.anchor;
           var isSelected = name == selected;
@@ -100,14 +112,14 @@ var Anchors = function (_React$PureComponent) {
           return _react2.default.createElement(
             'span',
             {
-              key: name,
-              title: i18n.categories[name.toLowerCase()],
+              key: id,
+              title: i18n.categories[id],
               'data-index': i,
               onClick: _this2.handleClick,
               className: 'emoji-mart-anchor ' + (isSelected ? 'emoji-mart-anchor-selected' : ''),
               style: { color: isSelected ? color : null }
             },
-            _react2.default.createElement('div', { dangerouslySetInnerHTML: { __html: _svgs2.default[name] } }),
+            _react2.default.createElement('div', { dangerouslySetInnerHTML: { __html: _this2.getSVG(id) } }),
             _react2.default.createElement('span', {
               className: 'emoji-mart-anchor-bar',
               style: { backgroundColor: color }

@@ -25,7 +25,7 @@ var Skins = function (_React$PureComponent) {
   _createClass(Skins, [{
     key: 'handleClick',
     value: function handleClick(e) {
-      var skin = e.currentTarget.getAttribute('data-skin');
+      var skin = parseInt(e.currentTarget.getAttribute('data-skin'));
       var onChange = this.props.onChange;
 
 

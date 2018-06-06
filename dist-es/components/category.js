@@ -9,7 +9,7 @@ import PropTypes from 'prop-types';
 
 import frequently from '../utils/frequently';
 import { getData } from '../utils';
-import { Emoji } from '.';
+import { NimbleEmoji } from '.';
 
 var Category = function (_React$Component) {
   _inherits(Category, _React$Component);
@@ -19,6 +19,7 @@ var Category = function (_React$Component) {
 
     var _this = _possibleConstructorReturn(this, (Category.__proto__ || _Object$getPrototypeOf(Category)).call(this, props));
 
+    _this.data = props.data;
     _this.setContainerRef = _this.setContainerRef.bind(_this);
     _this.setLabelRef = _this.setLabelRef.bind(_this);
     return _this;
@@ -104,8 +105,6 @@ var Category = function (_React$Component) {
       margin = margin > this.maxMargin ? this.maxMargin : margin;
 
       if (margin == this.margin) return;
-      var name = this.props.name;
-
 
       if (!this.props.hasStickyPosition) {
         this.label.style.top = margin + 'px';
@@ -117,6 +116,8 @@ var Category = function (_React$Component) {
   }, {
     key: 'getEmojis',
     value: function getEmojis() {
+      var _this2 = this;
+
       var _props2 = this.props;
       var name = _props2.name;
       var emojis = _props2.emojis;
@@ -140,7 +141,7 @@ var Category = function (_React$Component) {
 
             return id;
           }).filter(function (id) {
-            return !!getData(id);
+            return !!getData(id, null, null, _this2.data);
           });
         }
 
@@ -179,7 +180,10 @@ var Category = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
+      var _this3 = this;
+
       var _props3 = this.props;
+      var id = _props3.id;
       var name = _props3.name;
       var hasStickyPosition = _props3.hasStickyPosition;
       var emojiProps = _props3.emojiProps;
@@ -222,11 +226,11 @@ var Category = function (_React$Component) {
           React.createElement(
             'span',
             { style: labelSpanStyles, ref: this.setLabelRef },
-            i18n.categories[name.toLowerCase()]
+            i18n.categories[id]
           )
         ),
         emojis && emojis.map(function (emoji) {
-          return Emoji(_extends({ emoji: emoji }, emojiProps));
+          return NimbleEmoji(_extends({ emoji: emoji, data: _this3.data }, emojiProps));
         }),
         emojis && !emojis.length && React.createElement(
           'div',
@@ -234,7 +238,9 @@ var Category = function (_React$Component) {
           React.createElement(
             'div',
             null,
-            Emoji(_extends({}, emojiProps, {
+            NimbleEmoji(_extends({
+              data: this.data
+            }, emojiProps, {
               size: 38,
               emoji: 'sleuth_or_spy',
               onOver: null,

@@ -54,6 +54,7 @@ var Category = function (_React$Component) {
 
     var _this = (0, _possibleConstructorReturn3.default)(this, (Category.__proto__ || (0, _objectGetPrototypeOf2.default)(Category)).call(this, props));
 
+    _this.data = props.data;
     _this.setContainerRef = _this.setContainerRef.bind(_this);
     _this.setLabelRef = _this.setLabelRef.bind(_this);
     return _this;
@@ -139,8 +140,6 @@ var Category = function (_React$Component) {
       margin = margin > this.maxMargin ? this.maxMargin : margin;
 
       if (margin == this.margin) return;
-      var name = this.props.name;
-
 
       if (!this.props.hasStickyPosition) {
         this.label.style.top = margin + 'px';
@@ -152,6 +151,8 @@ var Category = function (_React$Component) {
   }, {
     key: 'getEmojis',
     value: function getEmojis() {
+      var _this2 = this;
+
       var _props2 = this.props;
       var name = _props2.name;
       var emojis = _props2.emojis;
@@ -175,7 +176,7 @@ var Category = function (_React$Component) {
 
             return id;
           }).filter(function (id) {
-            return !!(0, _utils.getData)(id);
+            return !!(0, _utils.getData)(id, null, null, _this2.data);
           });
         }
 
@@ -214,7 +215,10 @@ var Category = function (_React$Component) {
   }, {
     key: 'render',
     value: function render() {
+      var _this3 = this;
+
       var _props3 = this.props;
+      var id = _props3.id;
       var name = _props3.name;
       var hasStickyPosition = _props3.hasStickyPosition;
       var emojiProps = _props3.emojiProps;
@@ -257,11 +261,11 @@ var Category = function (_React$Component) {
           _react2.default.createElement(
             'span',
             { style: labelSpanStyles, ref: this.setLabelRef },
-            i18n.categories[name.toLowerCase()]
+            i18n.categories[id]
           )
         ),
         emojis && emojis.map(function (emoji) {
-          return (0, _.Emoji)((0, _extends3.default)({ emoji: emoji }, emojiProps));
+          return (0, _.NimbleEmoji)((0, _extends3.default)({ emoji: emoji, data: _this3.data }, emojiProps));
         }),
         emojis && !emojis.length && _react2.default.createElement(
           'div',
@@ -269,7 +273,9 @@ var Category = function (_React$Component) {
           _react2.default.createElement(
             'div',
             null,
-            (0, _.Emoji)((0, _extends3.default)({}, emojiProps, {
+            (0, _.NimbleEmoji)((0, _extends3.default)({
+              data: this.data
+            }, emojiProps, {
               size: 38,
               emoji: 'sleuth_or_spy',
               onOver: null,

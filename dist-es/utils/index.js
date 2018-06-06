@@ -1,6 +1,5 @@
 import _Object$keys from 'babel-runtime/core-js/object/keys';
-import buildSearch from './build-search';
-import data from '../data';
+import { buildSearch } from './data';
 import stringFromCodePoint from '../polyfills/stringFromCodePoint';
 
 var _JSON = JSON;
@@ -59,7 +58,7 @@ function getSanitizedData() {
   return sanitize(getData.apply(undefined, arguments));
 }
 
-function getData(emoji, skin, set) {
+function getData(emoji, skin, set, data) {
   var emojiData = {};
 
   if (typeof emoji == 'string') {
@@ -69,12 +68,12 @@ function getData(emoji, skin, set) {
       emoji = matches[1];
 
       if (matches[2]) {
-        skin = parseInt(matches[2]);
+        skin = parseInt(matches[2], 10);
       }
     }
 
-    if (data.short_names.hasOwnProperty(emoji)) {
-      emoji = data.short_names[emoji];
+    if (data.aliases.hasOwnProperty(emoji)) {
+      emoji = data.aliases[emoji];
     }
 
     if (data.emojis.hasOwnProperty(emoji)) {
@@ -83,8 +82,8 @@ function getData(emoji, skin, set) {
       return null;
     }
   } else if (emoji.id) {
-    if (data.short_names.hasOwnProperty(emoji.id)) {
-      emoji.id = data.short_names[emoji.id];
+    if (data.aliases.hasOwnProperty(emoji.id)) {
+      emoji.id = data.aliases[emoji.id];
     }
 
     if (data.emojis.hasOwnProperty(emoji.id)) {
@@ -115,7 +114,7 @@ function getData(emoji, skin, set) {
       delete emojiData.variations;
     }
 
-    if (variationData['has_img_' + set]) {
+    if (variationData['has_img_' + set] == undefined || variationData['has_img_' + set]) {
       emojiData.skin_tone = skin;
 
       for (var k in variationData) {
@@ -174,6 +173,7 @@ function deepMerge(a, b) {
 
 // https://github.com/sonicdoe/measure-scrollbar
 function measureScrollbar() {
+  if (typeof document == 'undefined') return 0;
   var div = document.createElement('div');
 
   div.style.width = '100px';
