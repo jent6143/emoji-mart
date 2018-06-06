@@ -9,13 +9,7 @@ var _keys = require('babel-runtime/core-js/object/keys');
 
 var _keys2 = _interopRequireDefault(_keys);
 
-var _buildSearch = require('./build-search');
-
-var _buildSearch2 = _interopRequireDefault(_buildSearch);
-
-var _data = require('../data');
-
-var _data2 = _interopRequireDefault(_data);
+var _data = require('./data');
 
 var _stringFromCodePoint = require('../polyfills/stringFromCodePoint');
 
@@ -79,7 +73,7 @@ function getSanitizedData() {
   return sanitize(getData.apply(undefined, arguments));
 }
 
-function getData(emoji, skin, set) {
+function getData(emoji, skin, set, data) {
   var emojiData = {};
 
   if (typeof emoji == 'string') {
@@ -89,26 +83,26 @@ function getData(emoji, skin, set) {
       emoji = matches[1];
 
       if (matches[2]) {
-        skin = parseInt(matches[2]);
+        skin = parseInt(matches[2], 10);
       }
     }
 
-    if (_data2.default.short_names.hasOwnProperty(emoji)) {
-      emoji = _data2.default.short_names[emoji];
+    if (data.aliases.hasOwnProperty(emoji)) {
+      emoji = data.aliases[emoji];
     }
 
-    if (_data2.default.emojis.hasOwnProperty(emoji)) {
-      emojiData = _data2.default.emojis[emoji];
+    if (data.emojis.hasOwnProperty(emoji)) {
+      emojiData = data.emojis[emoji];
     } else {
       return null;
     }
   } else if (emoji.id) {
-    if (_data2.default.short_names.hasOwnProperty(emoji.id)) {
-      emoji.id = _data2.default.short_names[emoji.id];
+    if (data.aliases.hasOwnProperty(emoji.id)) {
+      emoji.id = data.aliases[emoji.id];
     }
 
-    if (_data2.default.emojis.hasOwnProperty(emoji.id)) {
-      emojiData = _data2.default.emojis[emoji.id];
+    if (data.emojis.hasOwnProperty(emoji.id)) {
+      emojiData = data.emojis[emoji.id];
       skin || (skin = emoji.skin);
     }
   }
@@ -118,7 +112,7 @@ function getData(emoji, skin, set) {
     emojiData.custom = true;
 
     if (!emojiData.search) {
-      emojiData.search = (0, _buildSearch2.default)(emoji);
+      emojiData.search = (0, _data.buildSearch)(emoji);
     }
   }
 
@@ -135,7 +129,7 @@ function getData(emoji, skin, set) {
       delete emojiData.variations;
     }
 
-    if (variationData['has_img_' + set]) {
+    if (variationData['has_img_' + set] == undefined || variationData['has_img_' + set]) {
       emojiData.skin_tone = skin;
 
       for (var k in variationData) {
@@ -194,6 +188,7 @@ function deepMerge(a, b) {
 
 // https://github.com/sonicdoe/measure-scrollbar
 function measureScrollbar() {
+  if (typeof document == 'undefined') return 0;
   var div = document.createElement('div');
 
   div.style.width = '100px';

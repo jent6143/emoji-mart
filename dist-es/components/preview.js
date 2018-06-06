@@ -7,8 +7,8 @@ import _inherits from '../polyfills/inherits';
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import { Emoji, Skins } from '.';
 import { getData } from '../utils';
+import { NimbleEmoji, Skins } from '.';
 
 var Preview = function (_React$PureComponent) {
   _inherits(Preview, _React$PureComponent);
@@ -18,6 +18,7 @@ var Preview = function (_React$PureComponent) {
 
     var _this = _possibleConstructorReturn(this, (Preview.__proto__ || _Object$getPrototypeOf(Preview)).call(this, props));
 
+    _this.data = props.data;
     _this.state = { emoji: null };
     return _this;
   }
@@ -29,12 +30,13 @@ var Preview = function (_React$PureComponent) {
       var _props = this.props;
       var emojiProps = _props.emojiProps;
       var skinsProps = _props.skinsProps;
+      var showSkinTones = _props.showSkinTones;
       var title = _props.title;
       var idleEmoji = _props.emoji;
 
 
       if (emoji) {
-        var emojiData = getData(emoji);
+        var emojiData = getData(emoji, null, null, this.data);
         var _emojiData$emoticons = emojiData.emoticons;
         var emoticons = _emojiData$emoticons === undefined ? [] : _emojiData$emoticons;
         var knownEmoticons = [];
@@ -55,7 +57,11 @@ var Preview = function (_React$PureComponent) {
           React.createElement(
             'div',
             { className: 'emoji-mart-preview-emoji' },
-            Emoji(_extends({ key: emoji.id, emoji: emoji }, emojiProps))
+            NimbleEmoji(_extends({
+              key: emoji.id,
+              emoji: emoji,
+              data: this.data
+            }, emojiProps))
           ),
           React.createElement(
             'div',
@@ -98,7 +104,7 @@ var Preview = function (_React$PureComponent) {
           React.createElement(
             'div',
             { className: 'emoji-mart-preview-emoji' },
-            idleEmoji && idleEmoji.length && Emoji(_extends({ emoji: idleEmoji }, emojiProps))
+            idleEmoji && idleEmoji.length && NimbleEmoji(_extends({ emoji: idleEmoji, data: this.data }, emojiProps))
           ),
           React.createElement(
             'div',
@@ -109,7 +115,7 @@ var Preview = function (_React$PureComponent) {
               title
             )
           ),
-          React.createElement(
+          showSkinTones && React.createElement(
             'div',
             { className: 'emoji-mart-preview-skins' },
             React.createElement(Skins, skinsProps)
@@ -123,3 +129,9 @@ var Preview = function (_React$PureComponent) {
 }(React.PureComponent);
 
 export default Preview;
+
+
+Preview.defaultProps = {
+  showSkinTones: true,
+  onChange: function onChange() {}
+};

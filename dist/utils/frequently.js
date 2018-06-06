@@ -12,10 +12,17 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var DEFAULTS = ['+1', 'grinning', 'kissing_heart', 'heart_eyes', 'laughing', 'stuck_out_tongue_winking_eye', 'sweat_smile', 'joy', 'scream', 'disappointed', 'unamused', 'weary', 'sob', 'sunglasses', 'heart', 'poop'];
 
-var frequently = _store2.default.get('frequently');
+var frequently = void 0,
+    initialized = void 0;
 var defaults = {};
 
+function init() {
+  initialized = true;
+  frequently = _store2.default.get('frequently');
+}
+
 function add(emoji) {
+  if (!initialized) init();
   var id = emoji.id;
 
 
@@ -28,6 +35,7 @@ function add(emoji) {
 }
 
 function get(perLine) {
+  if (!initialized) init();
   if (!frequently) {
     defaults = {};
 

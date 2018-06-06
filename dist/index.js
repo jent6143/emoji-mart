@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.frequently = exports.store = exports.emojiIndex = exports.Category = exports.Emoji = exports.Picker = undefined;
+exports.frequently = exports.store = exports.emojiIndex = exports.NimbleEmojiIndex = exports.Category = exports.NimbleEmoji = exports.Emoji = exports.NimblePicker = exports.Picker = undefined;
 
 var _components = require('./components');
 
@@ -13,10 +13,22 @@ Object.defineProperty(exports, 'Picker', {
     return _components.Picker;
   }
 });
+Object.defineProperty(exports, 'NimblePicker', {
+  enumerable: true,
+  get: function get() {
+    return _components.NimblePicker;
+  }
+});
 Object.defineProperty(exports, 'Emoji', {
   enumerable: true,
   get: function get() {
     return _components.Emoji;
+  }
+});
+Object.defineProperty(exports, 'NimbleEmoji', {
+  enumerable: true,
+  get: function get() {
+    return _components.NimbleEmoji;
   }
 });
 Object.defineProperty(exports, 'Category', {
@@ -26,7 +38,16 @@ Object.defineProperty(exports, 'Category', {
   }
 });
 
-var _emojiIndex = require('./utils/emoji-index');
+var _nimbleEmojiIndex = require('./utils/emoji-index/nimble-emoji-index');
+
+Object.defineProperty(exports, 'NimbleEmojiIndex', {
+  enumerable: true,
+  get: function get() {
+    return _interopRequireDefault(_nimbleEmojiIndex).default;
+  }
+});
+
+var _emojiIndex = require('./utils/emoji-index/emoji-index');
 
 var _emojiIndex2 = _interopRequireDefault(_emojiIndex);
 

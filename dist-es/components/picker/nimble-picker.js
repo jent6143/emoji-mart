@@ -1,64 +1,21 @@
-'use strict';
+import _extends from '../../polyfills/extends';
+import _Object$getPrototypeOf from '../../polyfills/objectGetPrototypeOf';
+import _classCallCheck from 'babel-runtime/helpers/classCallCheck';
+import _createClass from '../../polyfills/createClass';
+import _possibleConstructorReturn from '../../polyfills/possibleConstructorReturn';
+import _inherits from '../../polyfills/inherits';
+import '../../vendor/raf-polyfill';
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
+import React from 'react';
+import PropTypes from 'prop-types';
 
-var _extends2 = require('../polyfills/extends');
+import store from '../../utils/store';
+import frequently from '../../utils/frequently';
+import { deepMerge, measureScrollbar } from '../../utils';
+import { uncompress } from '../../utils/data';
+import { PickerPropTypes, PickerDefaultProps } from '../../utils/shared-props';
 
-var _extends3 = _interopRequireDefault(_extends2);
-
-var _objectGetPrototypeOf = require('../polyfills/objectGetPrototypeOf');
-
-var _objectGetPrototypeOf2 = _interopRequireDefault(_objectGetPrototypeOf);
-
-var _classCallCheck2 = require('babel-runtime/helpers/classCallCheck');
-
-var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
-
-var _createClass2 = require('../polyfills/createClass');
-
-var _createClass3 = _interopRequireDefault(_createClass2);
-
-var _possibleConstructorReturn2 = require('../polyfills/possibleConstructorReturn');
-
-var _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2);
-
-var _inherits2 = require('../polyfills/inherits');
-
-var _inherits3 = _interopRequireDefault(_inherits2);
-
-require('../vendor/raf-polyfill');
-
-var _react = require('react');
-
-var _react2 = _interopRequireDefault(_react);
-
-var _propTypes = require('prop-types');
-
-var _propTypes2 = _interopRequireDefault(_propTypes);
-
-var _data = require('../data');
-
-var _data2 = _interopRequireDefault(_data);
-
-var _store = require('../utils/store');
-
-var _store2 = _interopRequireDefault(_store);
-
-var _frequently = require('../utils/frequently');
-
-var _frequently2 = _interopRequireDefault(_frequently);
-
-var _utils = require('../utils');
-
-var _ = require('.');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var RECENT_CATEGORY = { name: 'Recent', emojis: null };
-var SEARCH_CATEGORY = { name: 'Search', emojis: null, anchor: false };
-var CUSTOM_CATEGORY = { name: 'Custom', emojis: [] };
+import { Anchors, Category, Preview, Search } from '..';
 
 var I18N = {
   search: 'Search',
@@ -78,54 +35,65 @@ var I18N = {
   }
 };
 
-var Picker = function (_React$PureComponent) {
-  (0, _inherits3.default)(Picker, _React$PureComponent);
+var NimblePicker = function (_React$PureComponent) {
+  _inherits(NimblePicker, _React$PureComponent);
 
-  function Picker(props) {
-    (0, _classCallCheck3.default)(this, Picker);
+  function NimblePicker(props) {
+    _classCallCheck(this, NimblePicker);
 
-    var _this = (0, _possibleConstructorReturn3.default)(this, (Picker.__proto__ || (0, _objectGetPrototypeOf2.default)(Picker)).call(this, props));
+    var _this = _possibleConstructorReturn(this, (NimblePicker.__proto__ || _Object$getPrototypeOf(NimblePicker)).call(this, props));
 
-    _this.i18n = (0, _utils.deepMerge)(I18N, props.i18n);
+    _this.RECENT_CATEGORY = { id: 'recent', name: 'Recent', emojis: null };
+    _this.CUSTOM_CATEGORY = { id: 'custom', name: 'Custom', emojis: [] };
+    _this.SEARCH_CATEGORY = {
+      id: 'search',
+      name: 'Search',
+      emojis: null,
+      anchor: false
+    };
+
+    if (props.data.compressed) {
+      uncompress(props.data);
+    }
+
+    _this.data = props.data;
+    _this.i18n = deepMerge(I18N, props.i18n);
     _this.state = {
-      skin: _store2.default.get('skin') || props.skin,
+      skin: props.skin || store.get('skin') || props.defaultSkin,
       firstRender: true
     };
 
     _this.categories = [];
-    var allCategories = [].concat(_data2.default.categories);
+    var allCategories = [].concat(_this.data.categories);
 
     if (props.custom.length > 0) {
-      CUSTOM_CATEGORY.emojis = props.custom.map(function (emoji) {
-        return (0, _extends3.default)({}, emoji, {
+      _this.CUSTOM_CATEGORY.emojis = props.custom.map(function (emoji) {
+        return _extends({}, emoji, {
           // `<Category />` expects emoji to have an `id`.
           id: emoji.short_names[0],
           custom: true
         });
       });
 
-      allCategories.push(CUSTOM_CATEGORY);
+      allCategories.push(_this.CUSTOM_CATEGORY);
     }
 
     _this.hideRecent = true;
 
     if (props.include != undefined) {
       allCategories.sort(function (a, b) {
-        var aName = a.name.toLowerCase();
-        var bName = b.name.toLowerCase();
-
-        if (props.include.indexOf(aName) > props.include.indexOf(bName)) {
+        if (props.include.indexOf(a.id) > props.include.indexOf(b.id)) {
           return 1;
         }
 
-        return 0;
+        return -1;
       });
     }
 
     for (var categoryIndex = 0; categoryIndex < allCategories.length; categoryIndex++) {
       var category = allCategories[categoryIndex];
-      var isIncluded = props.include && props.include.length ? props.include.indexOf(category.name.toLowerCase()) > -1 : true;
-      var isExcluded = props.exclude && props.exclude.length ? props.exclude.indexOf(category.name.toLowerCase()) > -1 : false;
+      var isIncluded = props.include && props.include.length ? props.include.indexOf(category.id) > -1 : true;
+      var isExcluded = props.exclude && props.exclude.length ? props.exclude.indexOf(category.id) > -1 : false;
       if (!isIncluded || isExcluded) {
         continue;
       }
@@ -137,7 +105,7 @@ var Picker = function (_React$PureComponent) {
 
         for (var emojiIndex = 0; emojiIndex < emojis.length; emojiIndex++) {
           var emoji = emojis[emojiIndex];
-          if (props.emojisToShowFilter(_data2.default.emojis[emoji] || emoji)) {
+          if (props.emojisToShowFilter(_this.data.emojis[emoji] || emoji)) {
             newEmojis.push(emoji);
           }
         }
@@ -145,7 +113,8 @@ var Picker = function (_React$PureComponent) {
         if (newEmojis.length) {
           var newCategory = {
             emojis: newEmojis,
-            name: category.name
+            name: category.name,
+            id: category.id
           };
 
           _this.categories.push(newCategory);
@@ -155,18 +124,18 @@ var Picker = function (_React$PureComponent) {
       }
     }
 
-    var includeRecent = props.include && props.include.length ? props.include.indexOf('recent') > -1 : true;
-    var excludeRecent = props.exclude && props.exclude.length ? props.exclude.indexOf('recent') > -1 : false;
+    var includeRecent = props.include && props.include.length ? props.include.indexOf(_this.RECENT_CATEGORY.id) > -1 : true;
+    var excludeRecent = props.exclude && props.exclude.length ? props.exclude.indexOf(_this.RECENT_CATEGORY.id) > -1 : false;
     if (includeRecent && !excludeRecent) {
       _this.hideRecent = false;
-      _this.categories.unshift(RECENT_CATEGORY);
+      _this.categories.unshift(_this.RECENT_CATEGORY);
     }
 
     if (_this.categories[0]) {
       _this.categories[0].first = true;
     }
 
-    _this.categories.unshift(SEARCH_CATEGORY);
+    _this.categories.unshift(_this.SEARCH_CATEGORY);
 
     _this.setAnchorsRef = _this.setAnchorsRef.bind(_this);
     _this.handleAnchorClick = _this.handleAnchorClick.bind(_this);
@@ -178,16 +147,20 @@ var Picker = function (_React$PureComponent) {
     _this.handleEmojiOver = _this.handleEmojiOver.bind(_this);
     _this.handleEmojiLeave = _this.handleEmojiLeave.bind(_this);
     _this.handleEmojiClick = _this.handleEmojiClick.bind(_this);
+    _this.handleEmojiSelect = _this.handleEmojiSelect.bind(_this);
     _this.setPreviewRef = _this.setPreviewRef.bind(_this);
     _this.handleSkinChange = _this.handleSkinChange.bind(_this);
+    _this.handleKeyDown = _this.handleKeyDown.bind(_this);
     return _this;
   }
 
-  (0, _createClass3.default)(Picker, [{
+  _createClass(NimblePicker, [{
     key: 'componentWillReceiveProps',
     value: function componentWillReceiveProps(props) {
-      if (props.skin && !_store2.default.get('skin')) {
+      if (props.skin) {
         this.setState({ skin: props.skin });
+      } else if (props.defaultSkin && !store.get('skin')) {
+        this.setState({ skin: props.defaultSkin });
       }
     }
   }, {
@@ -211,7 +184,7 @@ var Picker = function (_React$PureComponent) {
   }, {
     key: 'componentWillUnmount',
     value: function componentWillUnmount() {
-      SEARCH_CATEGORY.emojis = null;
+      this.SEARCH_CATEGORY.emojis = null;
 
       clearTimeout(this.leaveTimeout);
       clearTimeout(this.firstRenderTimeout);
@@ -239,7 +212,7 @@ var Picker = function (_React$PureComponent) {
       }
 
       // Use Array.prototype.find() when it is more widely supported.
-      var emojiData = CUSTOM_CATEGORY.emojis.filter(function (customEmoji) {
+      var emojiData = this.CUSTOM_CATEGORY.emojis.filter(function (customEmoji) {
         return customEmoji.id === emoji.id;
       })[0];
       for (var key in emojiData) {
@@ -267,10 +240,16 @@ var Picker = function (_React$PureComponent) {
   }, {
     key: 'handleEmojiClick',
     value: function handleEmojiClick(emoji, e) {
+      this.props.onClick(emoji, e);
+      this.handleEmojiSelect(emoji);
+    }
+  }, {
+    key: 'handleEmojiSelect',
+    value: function handleEmojiSelect(emoji) {
       var _this3 = this;
 
-      this.props.onClick(emoji, e);
-      if (!this.hideRecent && !this.props.recent) _frequently2.default.add(emoji);
+      this.props.onSelect(emoji);
+      if (!this.hideRecent && !this.props.recent) frequently.add(emoji);
 
       var component = this.categoryRefs['category-1'];
       if (component) {
@@ -285,7 +264,7 @@ var Picker = function (_React$PureComponent) {
           _this3.updateCategoriesSize();
           _this3.handleScrollPaint();
 
-          if (SEARCH_CATEGORY.emojis) {
+          if (_this3.SEARCH_CATEGORY.emojis) {
             component.updateDisplay('none');
           }
         });
@@ -310,8 +289,8 @@ var Picker = function (_React$PureComponent) {
 
       var activeCategory = null;
 
-      if (SEARCH_CATEGORY.emojis) {
-        activeCategory = SEARCH_CATEGORY;
+      if (this.SEARCH_CATEGORY.emojis) {
+        activeCategory = this.SEARCH_CATEGORY;
       } else {
         var target = this.scroll,
             scrollTop = target.scrollTop,
@@ -363,7 +342,7 @@ var Picker = function (_React$PureComponent) {
   }, {
     key: 'handleSearch',
     value: function handleSearch(emojis) {
-      SEARCH_CATEGORY.emojis = emojis;
+      this.SEARCH_CATEGORY.emojis = emojis;
 
       for (var i = 0, l = this.categories.length; i < l; i++) {
         var component = this.categoryRefs['category-' + i];
@@ -401,7 +380,7 @@ var Picker = function (_React$PureComponent) {
         }
       };
 
-      if (SEARCH_CATEGORY.emojis) {
+      if (this.SEARCH_CATEGORY.emojis) {
         this.handleSearch(null);
         this.search.clear();
 
@@ -414,9 +393,34 @@ var Picker = function (_React$PureComponent) {
     key: 'handleSkinChange',
     value: function handleSkinChange(skin) {
       var newState = { skin: skin };
+      var onSkinChange = this.props.onSkinChange;
+
 
       this.setState(newState);
-      _store2.default.update(newState);
+      store.update(newState);
+
+      onSkinChange(skin);
+    }
+  }, {
+    key: 'handleKeyDown',
+    value: function handleKeyDown(e) {
+      var handled = false;
+
+      switch (e.keyCode) {
+        case 13:
+          var emoji = void 0;
+
+          if (this.SEARCH_CATEGORY.emojis && (emoji = this.SEARCH_CATEGORY.emojis[0])) {
+            this.handleEmojiSelect(emoji);
+          }
+
+          handled = true;
+          break;
+      }
+
+      if (handled) {
+        e.preventDefault();
+      }
     }
   }, {
     key: 'updateCategoriesSize',
@@ -484,39 +488,46 @@ var Picker = function (_React$PureComponent) {
       var backgroundImageFn = _props.backgroundImageFn;
       var emojisToShowFilter = _props.emojisToShowFilter;
       var showPreview = _props.showPreview;
+      var showSkinTones = _props.showSkinTones;
       var emojiTooltip = _props.emojiTooltip;
       var include = _props.include;
       var exclude = _props.exclude;
       var recent = _props.recent;
       var autoFocus = _props.autoFocus;
       var skin = this.state.skin;
-      var width = perLine * (emojiSize + 12) + 12 + 2 + (0, _utils.measureScrollbar)();
+      var width = perLine * (emojiSize + 12) + 12 + 2 + measureScrollbar();
 
-      return _react2.default.createElement(
+      return React.createElement(
         'div',
-        { style: (0, _extends3.default)({ width: width }, style), className: 'emoji-mart' },
-        _react2.default.createElement(
+        {
+          style: _extends({ width: width }, style),
+          className: 'emoji-mart',
+          onKeyDown: this.handleKeyDown
+        },
+        React.createElement(
           'div',
           { className: 'emoji-mart-bar' },
-          _react2.default.createElement(_.Anchors, {
+          React.createElement(Anchors, {
             ref: this.setAnchorsRef,
+            data: this.data,
             i18n: this.i18n,
             color: color,
             categories: this.categories,
             onAnchorClick: this.handleAnchorClick
           })
         ),
-        _react2.default.createElement(_.Search, {
+        React.createElement(Search, {
           ref: this.setSearchRef,
           onSearch: this.handleSearch,
+          data: this.data,
           i18n: this.i18n,
           emojisToShowFilter: emojisToShowFilter,
           include: include,
           exclude: exclude,
-          custom: CUSTOM_CATEGORY.emojis,
+          custom: this.CUSTOM_CATEGORY.emojis,
           autoFocus: autoFocus
         }),
-        _react2.default.createElement(
+        React.createElement(
           'div',
           {
             ref: this.setScrollRef,
@@ -524,17 +535,19 @@ var Picker = function (_React$PureComponent) {
             onScroll: this.handleScroll
           },
           this.getCategories().map(function (category, i) {
-            return _react2.default.createElement(_.Category, {
+            return React.createElement(Category, {
               ref: _this4.setCategoryRef.bind(_this4, 'category-' + i),
               key: category.name,
+              id: category.id,
               name: category.name,
               emojis: category.emojis,
               perLine: perLine,
               native: native,
               hasStickyPosition: _this4.hasStickyPosition,
+              data: _this4.data,
               i18n: _this4.i18n,
-              recent: category.name == 'Recent' ? recent : undefined,
-              custom: category.name == 'Recent' ? CUSTOM_CATEGORY.emojis : undefined,
+              recent: category.id == _this4.RECENT_CATEGORY.id ? recent : undefined,
+              custom: category.id == _this4.RECENT_CATEGORY.id ? _this4.CUSTOM_CATEGORY.emojis : undefined,
               emojiProps: {
                 native: native,
                 skin: skin,
@@ -551,13 +564,15 @@ var Picker = function (_React$PureComponent) {
             });
           })
         ),
-        showPreview && _react2.default.createElement(
+        showPreview && React.createElement(
           'div',
           { className: 'emoji-mart-bar' },
-          _react2.default.createElement(_.Preview, {
+          React.createElement(Preview, {
             ref: this.setPreviewRef,
+            data: this.data,
             title: title,
             emoji: emoji,
+            showSkinTones: showSkinTones,
             emojiProps: {
               native: native,
               size: 38,
@@ -575,29 +590,10 @@ var Picker = function (_React$PureComponent) {
       );
     }
   }]);
-  return Picker;
-}(_react2.default.PureComponent);
 
-exports.default = Picker;
+  return NimblePicker;
+}(React.PureComponent);
 
+export default NimblePicker;
 
-Picker.defaultProps = {
-  onClick: function onClick() {},
-  emojiSize: 24,
-  perLine: 9,
-  i18n: {},
-  style: {},
-  title: 'Emoji Mart™',
-  emoji: 'department_store',
-  color: '#ae65c5',
-  set: _.Emoji.defaultProps.set,
-  skin: _.Emoji.defaultProps.skin,
-  native: _.Emoji.defaultProps.native,
-  sheetSize: _.Emoji.defaultProps.sheetSize,
-  backgroundImageFn: _.Emoji.defaultProps.backgroundImageFn,
-  emojisToShowFilter: null,
-  showPreview: true,
-  emojiTooltip: _.Emoji.defaultProps.tooltip,
-  autoFocus: false,
-  custom: []
-};
+NimblePicker.defaultProps = _extends({}, PickerDefaultProps);

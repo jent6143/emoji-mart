@@ -4,6 +4,20 @@ var _JSON = JSON;
 
 var isLocalStorageSupported = typeof window !== 'undefined' && 'localStorage' in window;
 
+var getter = void 0;
+var setter = void 0;
+
+function setHandlers(handlers) {
+  handlers || (handlers = {});
+
+  getter = handlers.getter;
+  setter = handlers.setter;
+}
+
+function setNamespace(namespace) {
+  NAMESPACE = namespace;
+}
+
 function update(state) {
   for (var key in state) {
     var value = state[key];
@@ -12,27 +26,31 @@ function update(state) {
 }
 
 function set(key, value) {
-  if (!isLocalStorageSupported) return;
-  try {
-    window.localStorage[NAMESPACE + '.' + key] = _JSON.stringify(value);
-  } catch (e) {}
+  if (setter) {
+    setter(key, value);
+  } else {
+    if (!isLocalStorageSupported) return;
+    try {
+      window.localStorage[NAMESPACE + '.' + key] = _JSON.stringify(value);
+    } catch (e) {}
+  }
 }
 
 function get(key) {
-  if (!isLocalStorageSupported) return;
-  try {
-    var value = window.localStorage[NAMESPACE + '.' + key];
-  } catch (e) {
-    return;
-  }
+  if (getter) {
+    return getter(key);
+  } else {
+    if (!isLocalStorageSupported) return;
+    try {
+      var value = window.localStorage[NAMESPACE + '.' + key];
+    } catch (e) {
+      return;
+    }
 
-  if (value) {
-    return JSON.parse(value);
+    if (value) {
+      return JSON.parse(value);
+    }
   }
 }
 
-function setNamespace(namespace) {
-  NAMESPACE = namespace;
-}
-
-export default { update: update, set: set, get: get, setNamespace: setNamespace };
+export default { update: update, set: set, get: get, setNamespace: setNamespace, setHandlers: setHandlers };

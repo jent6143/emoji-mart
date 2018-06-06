@@ -32,9 +32,9 @@ var _propTypes = require('prop-types');
 
 var _propTypes2 = _interopRequireDefault(_propTypes);
 
-var _emojiIndex = require('../utils/emoji-index');
+var _nimbleEmojiIndex = require('../utils/emoji-index/nimble-emoji-index');
 
-var _emojiIndex2 = _interopRequireDefault(_emojiIndex);
+var _nimbleEmojiIndex2 = _interopRequireDefault(_nimbleEmojiIndex);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -46,6 +46,8 @@ var Search = function (_React$PureComponent) {
 
     var _this = (0, _possibleConstructorReturn3.default)(this, (Search.__proto__ || (0, _objectGetPrototypeOf2.default)(Search)).call(this, props));
 
+    _this.data = props.data;
+    _this.emojiIndex = new _nimbleEmojiIndex2.default(_this.data);
     _this.setRef = _this.setRef.bind(_this);
     _this.handleChange = _this.handleChange.bind(_this);
     return _this;
@@ -56,7 +58,7 @@ var Search = function (_React$PureComponent) {
     value: function handleChange() {
       var value = this.input.value;
 
-      this.props.onSearch(_emojiIndex2.default.search(value, {
+      this.props.onSearch(this.emojiIndex.search(value, {
         emojisToShowFilter: this.props.emojisToShowFilter,
         maxResults: this.props.maxResults,
         include: this.props.include,

@@ -5,7 +5,8 @@ import _possibleConstructorReturn from '../polyfills/possibleConstructorReturn';
 import _inherits from '../polyfills/inherits';
 import React from 'react';
 import PropTypes from 'prop-types';
-import emojiIndex from '../utils/emoji-index';
+
+import NimbleEmojiIndex from '../utils/emoji-index/nimble-emoji-index';
 
 var Search = function (_React$PureComponent) {
   _inherits(Search, _React$PureComponent);
@@ -15,6 +16,8 @@ var Search = function (_React$PureComponent) {
 
     var _this = _possibleConstructorReturn(this, (Search.__proto__ || _Object$getPrototypeOf(Search)).call(this, props));
 
+    _this.data = props.data;
+    _this.emojiIndex = new NimbleEmojiIndex(_this.data);
     _this.setRef = _this.setRef.bind(_this);
     _this.handleChange = _this.handleChange.bind(_this);
     return _this;
@@ -25,7 +28,7 @@ var Search = function (_React$PureComponent) {
     value: function handleChange() {
       var value = this.input.value;
 
-      this.props.onSearch(emojiIndex.search(value, {
+      this.props.onSearch(this.emojiIndex.search(value, {
         emojisToShowFilter: this.props.emojisToShowFilter,
         maxResults: this.props.maxResults,
         include: this.props.include,
