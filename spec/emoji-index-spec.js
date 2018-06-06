@@ -1,4 +1,4 @@
-import emojiIndex from './emoji-index'
+import emojiIndex from '../src/utils/emoji-index/emoji-index'
 
 describe('#emojiIndex', () => {
   describe('search', function() {
@@ -17,9 +17,11 @@ describe('#emojiIndex', () => {
     })
 
     it('should filter only emojis we care about, exclude pineapple', () => {
-      let emojisToShowFilter = unified => unified !== '1F34D'
+      let emojisToShowFilter = (data) => {
+        data.unified !== '1F34D'
+      }
       expect(
-        emojiIndex.search('apple', { emojisToShowFilter }).map(obj => obj.id)
+        emojiIndex.search('apple', { emojisToShowFilter }).map((obj) => obj.id),
       ).not.toContain('pineapple')
     })
 
@@ -28,13 +30,13 @@ describe('#emojiIndex', () => {
     })
 
     it('can search for thinking_face', () => {
-      expect(emojiIndex.search('thinking_fac').map(x => x.id)).toEqual([
+      expect(emojiIndex.search('thinking_fac').map((x) => x.id)).toEqual([
         'thinking_face',
       ])
     })
 
     it('can search for woman-facepalming', () => {
-      expect(emojiIndex.search('woman-facep').map(x => x.id)).toEqual([
+      expect(emojiIndex.search('woman-facep').map((x) => x.id)).toEqual([
         'woman-facepalming',
       ])
     })
