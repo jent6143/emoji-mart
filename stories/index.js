@@ -41,6 +41,7 @@ storiesOf('Picker', module)
       showPreview={boolean('Show preview', true)}
       showSkinTones={boolean('Show skin tones', true)}
       custom={CUSTOM_EMOJIS}
+      emojiTooltip
     />
   ));
 

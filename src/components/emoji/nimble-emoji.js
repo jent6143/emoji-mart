@@ -90,7 +90,7 @@ const NimbleEmoji = (props) => {
     return null
   }
 
-  let { unified, custom, short_names, imageUrl } = data,
+  let { unified, custom, short_names, colons, imageUrl } = data,
     style = {},
     children = props.children,
     className = 'emoji-mart-emoji',
@@ -101,7 +101,7 @@ const NimbleEmoji = (props) => {
   }
 
   if (props.tooltip) {
-    title = short_names[0]
+    title = short_names[0] ? `:${short_names[0]}:` : colons
   }
 
   if (props.native && unified) {
