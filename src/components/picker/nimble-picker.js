@@ -1,18 +1,15 @@
-import '../vendor/raf-polyfill'
+import '../../vendor/raf-polyfill'
 
 import React from 'react'
 import PropTypes from 'prop-types'
-import data from '../data'
 
-import store from '../utils/store'
-import frequently from '../utils/frequently'
-import { deepMerge, measureScrollbar } from '../utils'
+import store from '../../utils/store'
+import frequently from '../../utils/frequently'
+import { deepMerge, measureScrollbar } from '../../utils'
+import { uncompress } from '../../utils/data'
+import { PickerPropTypes, PickerDefaultProps } from '../../utils/shared-props'
 
-import { Anchors, Category, Emoji, Preview, Search } from '.'
-
-const RECENT_CATEGORY = { name: 'Recent', emojis: null }
-const SEARCH_CATEGORY = { name: 'Search', emojis: null, anchor: false }
-const CUSTOM_CATEGORY = { name: 'Custom', emojis: [] }
+import { Anchors, Category, Preview, Search } from '..'
 
 const I18N = {
   search: 'Search',
@@ -32,21 +29,35 @@ const I18N = {
   },
 }
 
-export default class Picker extends React.PureComponent {
+export default class NimblePicker extends React.PureComponent {
   constructor(props) {
     super(props)
 
+    this.RECENT_CATEGORY = { id: 'recent', name: 'Recent', emojis: null }
+    this.CUSTOM_CATEGORY = { id: 'custom', name: 'Custom', emojis: [] }
+    this.SEARCH_CATEGORY = {
+      id: 'search',
+      name: 'Search',
+      emojis: null,
+      anchor: false,
+    }
+
+    if (props.data.compressed) {
+      uncompress(props.data)
+    }
+
+    this.data = props.data
     this.i18n = deepMerge(I18N, props.i18n)
     this.state = {
-      skin: store.get('skin') || props.skin,
+      skin: props.skin || store.get('skin') || props.defaultSkin,
       firstRender: true,
     }
 
     this.categories = []
-    let allCategories = [].concat(data.categories)
+    let allCategories = [].concat(this.data.categories)
 
     if (props.custom.length > 0) {
-      CUSTOM_CATEGORY.emojis = props.custom.map(emoji => {
+      this.CUSTOM_CATEGORY.emojis = props.custom.map((emoji) => {
         return {
           ...emoji,
           // `<Category />` expects emoji to have an `id`.
@@ -55,21 +66,18 @@ export default class Picker extends React.PureComponent {
         }
       })
 
-      allCategories.push(CUSTOM_CATEGORY)
+      allCategories.push(this.CUSTOM_CATEGORY)
     }
 
     this.hideRecent = true
 
     if (props.include != undefined) {
       allCategories.sort((a, b) => {
-        let aName = a.name.toLowerCase()
-        let bName = b.name.toLowerCase()
-
-        if (props.include.indexOf(aName) > props.include.indexOf(bName)) {
+        if (props.include.indexOf(a.id) > props.include.indexOf(b.id)) {
           return 1
         }
 
-        return 0
+        return -1
       })
     }
 
@@ -81,11 +89,11 @@ export default class Picker extends React.PureComponent {
       const category = allCategories[categoryIndex]
       let isIncluded =
         props.include && props.include.length
-          ? props.include.indexOf(category.name.toLowerCase()) > -1
+          ? props.include.indexOf(category.id) > -1
           : true
       let isExcluded =
         props.exclude && props.exclude.length
-          ? props.exclude.indexOf(category.name.toLowerCase()) > -1
+          ? props.exclude.indexOf(category.id) > -1
           : false
       if (!isIncluded || isExcluded) {
         continue
@@ -97,7 +105,7 @@ export default class Picker extends React.PureComponent {
         const { emojis } = category
         for (let emojiIndex = 0; emojiIndex < emojis.length; emojiIndex++) {
           const emoji = emojis[emojiIndex]
-          if (props.emojisToShowFilter(data.emojis[emoji] || emoji)) {
+          if (props.emojisToShowFilter(this.data.emojis[emoji] || emoji)) {
             newEmojis.push(emoji)
           }
         }
@@ -106,6 +114,7 @@ export default class Picker extends React.PureComponent {
           let newCategory = {
             emojis: newEmojis,
             name: category.name,
+            id: category.id,
           }
 
           this.categories.push(newCategory)
@@ -117,22 +126,22 @@ export default class Picker extends React.PureComponent {
 
     let includeRecent =
       props.include && props.include.length
-        ? props.include.indexOf('recent') > -1
+        ? props.include.indexOf(this.RECENT_CATEGORY.id) > -1
         : true
     let excludeRecent =
       props.exclude && props.exclude.length
-        ? props.exclude.indexOf('recent') > -1
+        ? props.exclude.indexOf(this.RECENT_CATEGORY.id) > -1
         : false
     if (includeRecent && !excludeRecent) {
       this.hideRecent = false
-      this.categories.unshift(RECENT_CATEGORY)
+      this.categories.unshift(this.RECENT_CATEGORY)
     }
 
     if (this.categories[0]) {
       this.categories[0].first = true
     }
 
-    this.categories.unshift(SEARCH_CATEGORY)
+    this.categories.unshift(this.SEARCH_CATEGORY)
 
     this.setAnchorsRef = this.setAnchorsRef.bind(this)
     this.handleAnchorClick = this.handleAnchorClick.bind(this)
@@ -144,13 +153,17 @@ export default class Picker extends React.PureComponent {
     this.handleEmojiOver = this.handleEmojiOver.bind(this)
     this.handleEmojiLeave = this.handleEmojiLeave.bind(this)
     this.handleEmojiClick = this.handleEmojiClick.bind(this)
+    this.handleEmojiSelect = this.handleEmojiSelect.bind(this)
     this.setPreviewRef = this.setPreviewRef.bind(this)
     this.handleSkinChange = this.handleSkinChange.bind(this)
+    this.handleKeyDown = this.handleKeyDown.bind(this)
   }
 
   componentWillReceiveProps(props) {
-    if (props.skin && !store.get('skin')) {
+    if (props.skin) {
       this.setState({ skin: props.skin })
+    } else if (props.defaultSkin && !store.get('skin')) {
+      this.setState({ skin: props.defaultSkin })
     }
   }
 
@@ -169,7 +182,7 @@ export default class Picker extends React.PureComponent {
   }
 
   componentWillUnmount() {
-    SEARCH_CATEGORY.emojis = null
+    this.SEARCH_CATEGORY.emojis = null
 
     clearTimeout(this.leaveTimeout)
     clearTimeout(this.firstRenderTimeout)
@@ -181,7 +194,7 @@ export default class Picker extends React.PureComponent {
     const prefixes = ['', '-webkit-', '-ms-', '-moz-', '-o-']
 
     prefixes.forEach(
-      prefix => (stickyTestElement.style.position = `${prefix}sticky`)
+      (prefix) => (stickyTestElement.style.position = `${prefix}sticky`),
     )
 
     this.hasStickyPosition = !!stickyTestElement.style.position.length
@@ -194,8 +207,8 @@ export default class Picker extends React.PureComponent {
     }
 
     // Use Array.prototype.find() when it is more widely supported.
-    const emojiData = CUSTOM_CATEGORY.emojis.filter(
-      customEmoji => customEmoji.id === emoji.id
+    const emojiData = this.CUSTOM_CATEGORY.emojis.filter(
+      (customEmoji) => customEmoji.id === emoji.id,
     )[0]
     for (let key in emojiData) {
       if (emojiData.hasOwnProperty(key)) {
@@ -220,6 +233,11 @@ export default class Picker extends React.PureComponent {
 
   handleEmojiClick(emoji, e) {
     this.props.onClick(emoji, e)
+    this.handleEmojiSelect(emoji)
+  }
+
+  handleEmojiSelect(emoji) {
+    this.props.onSelect(emoji)
     if (!this.hideRecent && !this.props.recent) frequently.add(emoji)
 
     var component = this.categoryRefs['category-1']
@@ -235,7 +253,7 @@ export default class Picker extends React.PureComponent {
         this.updateCategoriesSize()
         this.handleScrollPaint()
 
-        if (SEARCH_CATEGORY.emojis) {
+        if (this.SEARCH_CATEGORY.emojis) {
           component.updateDisplay('none')
         }
       })
@@ -258,8 +276,8 @@ export default class Picker extends React.PureComponent {
 
     let activeCategory = null
 
-    if (SEARCH_CATEGORY.emojis) {
-      activeCategory = SEARCH_CATEGORY
+    if (this.SEARCH_CATEGORY.emojis) {
+      activeCategory = this.SEARCH_CATEGORY
     } else {
       var target = this.scroll,
         scrollTop = target.scrollTop,
@@ -288,7 +306,7 @@ export default class Picker extends React.PureComponent {
 
       if (scrollTop < minTop) {
         activeCategory = this.categories.filter(
-          category => !(category.anchor === false)
+          (category) => !(category.anchor === false),
         )[0]
       } else if (scrollTop + this.clientHeight >= this.scrollHeight) {
         activeCategory = this.categories[this.categories.length - 1]
@@ -308,7 +326,7 @@ export default class Picker extends React.PureComponent {
   }
 
   handleSearch(emojis) {
-    SEARCH_CATEGORY.emojis = emojis
+    this.SEARCH_CATEGORY.emojis = emojis
 
     for (let i = 0, l = this.categories.length; i < l; i++) {
       let component = this.categoryRefs[`category-${i}`]
@@ -343,7 +361,7 @@ export default class Picker extends React.PureComponent {
       }
     }
 
-    if (SEARCH_CATEGORY.emojis) {
+    if (this.SEARCH_CATEGORY.emojis) {
       this.handleSearch(null)
       this.search.clear()
 
@@ -354,10 +372,36 @@ export default class Picker extends React.PureComponent {
   }
 
   handleSkinChange(skin) {
-    var newState = { skin: skin }
+    var newState = { skin: skin },
+      { onSkinChange } = this.props
 
     this.setState(newState)
     store.update(newState)
+
+    onSkinChange(skin)
+  }
+
+  handleKeyDown(e) {
+    let handled = false
+
+    switch (e.keyCode) {
+      case 13:
+        let emoji
+
+        if (
+          this.SEARCH_CATEGORY.emojis &&
+          (emoji = this.SEARCH_CATEGORY.emojis[0])
+        ) {
+          this.handleEmojiSelect(emoji)
+        }
+
+        handled = true
+        break
+    }
+
+    if (handled) {
+      e.preventDefault()
+    }
   }
 
   updateCategoriesSize() {
@@ -417,6 +461,7 @@ export default class Picker extends React.PureComponent {
         backgroundImageFn,
         emojisToShowFilter,
         showPreview,
+        showSkinTones,
         emojiTooltip,
         include,
         exclude,
@@ -427,10 +472,15 @@ export default class Picker extends React.PureComponent {
       width = perLine * (emojiSize + 12) + 12 + 2 + measureScrollbar()
 
     return (
-      <div style={{ width: width, ...style }} className="emoji-mart">
+      <div
+        style={{ width: width, ...style }}
+        className="emoji-mart"
+        onKeyDown={this.handleKeyDown}
+      >
         <div className="emoji-mart-bar">
           <Anchors
             ref={this.setAnchorsRef}
+            data={this.data}
             i18n={this.i18n}
             color={color}
             categories={this.categories}
@@ -441,11 +491,12 @@ export default class Picker extends React.PureComponent {
         <Search
           ref={this.setSearchRef}
           onSearch={this.handleSearch}
+          data={this.data}
           i18n={this.i18n}
           emojisToShowFilter={emojisToShowFilter}
           include={include}
           exclude={exclude}
-          custom={CUSTOM_CATEGORY.emojis}
+          custom={this.CUSTOM_CATEGORY.emojis}
           autoFocus={autoFocus}
         />
 
@@ -459,17 +510,21 @@ export default class Picker extends React.PureComponent {
               <Category
                 ref={this.setCategoryRef.bind(this, `category-${i}`)}
                 key={category.name}
+                id={category.id}
                 name={category.name}
                 emojis={category.emojis}
                 perLine={perLine}
                 native={native}
                 hasStickyPosition={this.hasStickyPosition}
+                data={this.data}
                 i18n={this.i18n}
                 recent={
-                  category.name == 'Recent' ? recent : undefined
+                  category.id == this.RECENT_CATEGORY.id ? recent : undefined
                 }
                 custom={
-                  category.name == 'Recent' ? CUSTOM_CATEGORY.emojis : undefined
+                  category.id == this.RECENT_CATEGORY.id
+                    ? this.CUSTOM_CATEGORY.emojis
+                    : undefined
                 }
                 emojiProps={{
                   native: native,
@@ -493,8 +548,10 @@ export default class Picker extends React.PureComponent {
           <div className="emoji-mart-bar">
             <Preview
               ref={this.setPreviewRef}
+              data={this.data}
               title={title}
               emoji={emoji}
+              showSkinTones={showSkinTones}
               emojiProps={{
                 native: native,
                 size: 38,
@@ -515,55 +572,8 @@ export default class Picker extends React.PureComponent {
   }
 }
 
-Picker.propTypes = {
-  onClick: PropTypes.func,
-  perLine: PropTypes.number,
-  emojiSize: PropTypes.number,
-  i18n: PropTypes.object,
-  style: PropTypes.object,
-  title: PropTypes.string,
-  emoji: PropTypes.string,
-  color: PropTypes.string,
-  set: Emoji.propTypes.set,
-  skin: Emoji.propTypes.skin,
-  native: PropTypes.bool,
-  backgroundImageFn: Emoji.propTypes.backgroundImageFn,
-  sheetSize: Emoji.propTypes.sheetSize,
-  emojisToShowFilter: PropTypes.func,
-  showPreview: PropTypes.bool,
-  emojiTooltip: Emoji.propTypes.tooltip,
-  include: PropTypes.arrayOf(PropTypes.string),
-  exclude: PropTypes.arrayOf(PropTypes.string),
-  recent: PropTypes.arrayOf(PropTypes.string),
-  autoFocus: PropTypes.bool,
-  custom: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      short_names: PropTypes.arrayOf(PropTypes.string).isRequired,
-      emoticons: PropTypes.arrayOf(PropTypes.string),
-      keywords: PropTypes.arrayOf(PropTypes.string),
-      imageUrl: PropTypes.string.isRequired,
-    })
-  ),
+NimblePicker.propTypes = {
+  ...PickerPropTypes,
+  data: PropTypes.object.isRequired,
 }
-
-Picker.defaultProps = {
-  onClick: () => {},
-  emojiSize: 24,
-  perLine: 9,
-  i18n: {},
-  style: {},
-  title: 'Emoji Mart™',
-  emoji: 'department_store',
-  color: '#ae65c5',
-  set: Emoji.defaultProps.set,
-  skin: Emoji.defaultProps.skin,
-  native: Emoji.defaultProps.native,
-  sheetSize: Emoji.defaultProps.sheetSize,
-  backgroundImageFn: Emoji.defaultProps.backgroundImageFn,
-  emojisToShowFilter: null,
-  showPreview: true,
-  emojiTooltip: Emoji.defaultProps.tooltip,
-  autoFocus: false,
-  custom: [],
-}
+NimblePicker.defaultProps = { ...PickerDefaultProps }
