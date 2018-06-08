@@ -101,7 +101,7 @@ const NimbleEmoji = (props) => {
   }
 
   if (props.tooltip) {
-    title = short_names[0] ? `:${short_names[0]}:` : colons
+    title = short_names ? `:${short_names[0]}:` : colons
   }
 
   if (props.native && unified) {
