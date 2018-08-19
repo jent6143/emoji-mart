@@ -117,8 +117,8 @@ const NimbleEmoji = (props) => {
   } else if (custom) {
     className += ' emoji-mart-emoji-custom'
     style = {
-      width: 70px,
-      height: 70px,
+      width: props.size,
+      height: props.size,
       display: 'inline-block',
       backgroundImage: `url(${imageUrl})`,
       backgroundSize: 'contain',
